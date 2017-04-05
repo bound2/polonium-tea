@@ -5,39 +5,55 @@ from detector import Cv2HumanDetector
 from time import sleep
 import wget
 import shutil
+import os
 
 DONWLOAD_DIR = 'download'
 ACCEPTED_DIR = 'accepted'
 DISCARDED_DIR = 'discarded'
+DESIRED_FILE_COUNT = 6000
+
+def accepted_count():
+    return len(os.listdir(ACCEPTED_DIR))
+
+def discarded_count():
+    return len(os.listdir(DISCARDED_DIR))
+
+def total_count():
+    return accepted_count() + discarded_count()
+
+def parse_images(driver):
+    network_entries = driver.execute_script("return window.performance.getEntries();")
+    driver.execute_script("return window.performance.clearResourceTimings();")
+    image_set = set()
+    for entry_dict in network_entries:
+        if entry_dict.get('initiatorType') == 'img':
+            image_url = entry_dict.get('name')
+            file_name = wget.download(image_url, out = DONWLOAD_DIR)
+            image_set.add(file_name)
+            break
+
+    for image_path in image_set:
+        is_human = detector.is_potentially_human(image_path, 1)
+        if is_human == True:
+            shutil.move(image_path, ACCEPTED_DIR)
+        else:
+            shutil.move(image_path, DISCARDED_DIR)
 
 if __name__ == "__main__":
     driver = webdriver.Chrome()
     detector = Cv2HumanDetector()
     try:
         driver.get("https://www.instagram.com/explore/tags/tongue/")
-        network_entries = driver.execute_script("return window.performance.getEntries();")
-        image_set = set()
-        for entry_dict in network_entries:
-            if entry_dict.get('initiatorType') == 'img':
-                image_url = entry_dict.get('name')
-                file_name = wget.download(image_url, out = DONWLOAD_DIR)
-                image_set.add(file_name)
-                break
+        parse_images(driver = driver)
 
-        for image_path in image_set:
-            is_human = detector.is_potentially_human(image_path, 1)
-            if is_human == True:
-                shutil.move(image_path, ACCEPTED_DIR)
-            else:
-                shutil.move(image_path, DISCARDED_DIR)
-
-
-        # Clear network values from chrome
-        driver.execute_script("return window.performance.clearResourceTimings();")
+        # Load more is present the first time to load more
         driver.find_element_by_xpath("//*[contains(text(), 'Load more')]").click()
-        sleep(5.0)
 
-        #sleep(250)
-        #driver.execute_script("window.scrollTo(document.body.scrollTop, document.body.scrollHeight)")
+        while accepted_count() < DESIRED_FILE_COUNT:
+            sleep(1.0)
+            driver.execute_script("window.scrollTo(document.body.scrollTop, document.body.scrollHeight)")
+            parse_images(driver = driver)
+            print "Accepted files: ", accepted_count(), "/", DESIRED_FILE_COUNT
+            print "Files parsed: ", total_count()
     finally:
         driver.close()
