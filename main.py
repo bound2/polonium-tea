@@ -7,7 +7,7 @@ import wget
 import shutil
 import os
 
-DONWLOAD_DIR = 'download'
+DOWNLOAD_DIR = 'download'
 ACCEPTED_DIR = 'accepted'
 DISCARDED_DIR = 'discarded'
 DESIRED_FILE_COUNT = 6000
@@ -21,6 +21,22 @@ def discarded_count():
 def total_count():
     return accepted_count() + discarded_count()
 
+def empty_folders():
+    try:
+        shutil.rmtree(DOWNLOAD_DIR)
+        shutil.rmtree(ACCEPTED_DIR)
+        shutil.rmtree(DISCARDED_DIR)
+    except Exception as e:
+        pass
+
+def create_folders():
+    try:
+        os.makedirs(DOWNLOAD_DIR)
+        os.makedirs(ACCEPTED_DIR)
+        os.makedirs(DISCARDED_DIR)
+    except Exception as e:
+        pass
+
 def parse_images(driver):
     network_entries = driver.execute_script("return window.performance.getEntries();")
     driver.execute_script("return window.performance.clearResourceTimings();")
@@ -28,9 +44,8 @@ def parse_images(driver):
     for entry_dict in network_entries:
         if entry_dict.get('initiatorType') == 'img':
             image_url = entry_dict.get('name')
-            file_name = wget.download(image_url, out = DONWLOAD_DIR)
+            file_name = wget.download(image_url, out = DOWNLOAD_DIR)
             image_set.add(file_name)
-            break
 
     for image_path in image_set:
         is_human = detector.is_potentially_human(image_path, 1)
@@ -40,6 +55,8 @@ def parse_images(driver):
             shutil.move(image_path, DISCARDED_DIR)
 
 if __name__ == "__main__":
+    empty_folders()
+    create_folders()
     driver = webdriver.Chrome()
     detector = Cv2HumanDetector()
     try:
