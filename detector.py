@@ -10,8 +10,8 @@ class Cv2HumanDetector:
         raw_image = cv2.imread(image_path)
         grayscale_image = cv2.cvtColor(raw_image, cv2.COLOR_BGR2GRAY)
 
-        faces = self.cascade.detectMultiScale(grayscale_image, scaleFactor = 1.1,
-                                             minNeighbors = 5, minSize=(30, 30),
+        faces = self.cascade.detectMultiScale(grayscale_image, scaleFactor = 1.2,
+                                             minNeighbors = 5, minSize = (30, 30),
                                              flags = cv2.CASCADE_SCALE_IMAGE)
         face_count = len(faces)
         return face_count > 0 and face_count <= max_human_count

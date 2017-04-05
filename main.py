@@ -2,6 +2,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from detector import Cv2HumanDetector
+from time import sleep
 import wget
 import shutil
 
@@ -31,8 +32,10 @@ if __name__ == "__main__":
                 shutil.move(image_path, DISCARDED_DIR)
 
 
-        # Download all and check with openCV if human
-        # Then clear entries from driver and scroll further
+        # Clear network values from chrome
+        driver.execute_script("return window.performance.clearResourceTimings();")
+        driver.find_element_by_xpath("//*[contains(text(), 'Load more')]").click()
+        sleep(5.0)
 
         #sleep(250)
         #driver.execute_script("window.scrollTo(document.body.scrollTop, document.body.scrollHeight)")
