@@ -3,6 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from detector import Cv2HumanDetector
 import wget
+import shutil
 
 DONWLOAD_DIR = 'download'
 ACCEPTED_DIR = 'accepted'
@@ -20,8 +21,14 @@ if __name__ == "__main__":
                 image_url = entry_dict.get('name')
                 file_name = wget.download(image_url, out = DONWLOAD_DIR)
                 image_set.add(file_name)
+                break
 
-        #for image in image_set:
+        for image_path in image_set:
+            is_human = detector.is_potentially_human(image_path, 1)
+            if is_human == True:
+                shutil.move(image_path, ACCEPTED_DIR)
+            else:
+                shutil.move(image_path, DISCARDED_DIR)
 
 
         # Download all and check with openCV if human
