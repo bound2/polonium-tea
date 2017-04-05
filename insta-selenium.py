@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+import wget
+
+DONWLOAD_DIR = 'download'
+ACCEPTED_DIR = 'accepted'
+DISCARDED_DIR = 'discarded'
 
 if __name__ == "__main__":
     driver = webdriver.Chrome()
@@ -10,7 +15,10 @@ if __name__ == "__main__":
         image_set = set()
         for entry_dict in network_entries:
             if entry_dict.get('initiatorType') == 'img':
-                image_set.add(entry_dict.get('name'))
+                image_url = entry_dict.get('name')
+                file_name = wget.download(image_url, out = DONWLOAD_DIR)
+                image_set.add(file_name)
+
 
         # Download all and check with openCV if human
         # Then clear entries from driver and scroll further
