@@ -67,7 +67,9 @@ if __name__ == "__main__":
         parse_images(driver = driver)
 
         # Load more is present the first time to load more
-        driver.find_element_by_xpath("//*[contains(text(), 'Load more')]").click()
+        driver.execute_script("window.scrollTo(document.body.scrollTop, document.body.scrollHeight)")
+        element = driver.find_element_by_xpath("//*[contains(text(), 'Load more')]")
+        element.click()
 
         while accepted_count() < DESIRED_FILE_COUNT:
             sleep(1.0)
