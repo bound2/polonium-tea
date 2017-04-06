@@ -48,11 +48,14 @@ def parse_images(driver):
             image_set.add(file_name)
 
     for image_path in image_set:
-        is_human = detector.is_potentially_human(image_path, 1)
-        if is_human == True:
-            shutil.move(image_path, ACCEPTED_DIR)
+        if image_path.endswith('.wget') == False:
+            is_human = detector.is_potentially_human(image_path, 1)
+            if is_human == True:
+                shutil.move(image_path, ACCEPTED_DIR)
+            else:
+                shutil.move(image_path, DISCARDED_DIR)
         else:
-            shutil.move(image_path, DISCARDED_DIR)
+            os.remove(image_path)
 
 if __name__ == "__main__":
     empty_folders()
