@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from detector import Cv2HumanDetector
+from detector import HaarDetector
 from time import sleep
 from hexxer import Hexxer
 import wget
@@ -38,17 +38,13 @@ def create_folders():
     except Exception as e:
         pass
 
-def apply_haar_cascade(image_set):
+def apply_haar_cascade(detector, image_set):
     for image_path in image_set:
-        is_human = detector.is_potentially_human(image_path, 1)
-        if is_human == True:
+        object_found = detector.detect(image_path, min_size = (30, 30), max_object_count = 1)
+        if object_found == True:
             shutil.move(image_path, ACCEPTED_DIR)
         else:
             shutil.move(image_path, DISCARDED_DIR)
-
-def parse_images(hexxer):
-    for url in image_urls:
-        hexxer.create_image_from_cache(url, destination_folder = DOWNLOAD_DIR)
 
 if __name__ == "__main__":
     empty_folders()
@@ -56,7 +52,7 @@ if __name__ == "__main__":
 
     driver = webdriver.Chrome()
     hexxer = Hexxer(chrome_driver = driver)
-    detector = Cv2HumanDetector()
+    detector = HaarDetector("cascades/haarcascade_frontalface_default.xml")
 
     parsed_image_urls = set()
 
