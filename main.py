@@ -3,6 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from detector import Cv2HumanDetector
 from time import sleep
+from hexxer import Hexxer
 import wget
 import shutil
 import os
@@ -37,45 +38,54 @@ def create_folders():
     except Exception as e:
         pass
 
-def parse_images(driver):
-    network_entries = driver.execute_script("return window.performance.getEntries();")
-    driver.execute_script("return window.performance.clearResourceTimings();")
-    image_set = set()
-    for entry_dict in network_entries:
-        if entry_dict.get('initiatorType') == 'img':
-            image_url = entry_dict.get('name')
-            file_name = wget.download(image_url, out = DOWNLOAD_DIR)
-            image_set.add(file_name)
-
+def apply_haar_cascade(image_set):
     for image_path in image_set:
-        if image_path.endswith('.wget') == False:
-            is_human = detector.is_potentially_human(image_path, 1)
-            if is_human == True:
-                shutil.move(image_path, ACCEPTED_DIR)
-            else:
-                shutil.move(image_path, DISCARDED_DIR)
+        is_human = detector.is_potentially_human(image_path, 1)
+        if is_human == True:
+            shutil.move(image_path, ACCEPTED_DIR)
         else:
-            os.remove(image_path)
+            shutil.move(image_path, DISCARDED_DIR)
+
+def parse_images(hexxer):
+    for url in image_urls:
+        hexxer.create_image_from_cache(url, destination_folder = DOWNLOAD_DIR)
 
 if __name__ == "__main__":
     empty_folders()
     create_folders()
+
     driver = webdriver.Chrome()
+    hexxer = Hexxer(chrome_driver = driver)
     detector = Cv2HumanDetector()
+
+    parsed_image_urls = set()
+
     try:
         driver.get("https://www.instagram.com/explore/tags/tongue/")
-        parse_images(driver = driver)
-
+        driver.execute_script("window.open();")
+        sleep(2.0)
         # Load more is present the first time to load more
         driver.execute_script("window.scrollTo(document.body.scrollTop, document.body.scrollHeight)")
         element = driver.find_element_by_xpath("//*[contains(text(), 'Load more')]")
         element.click()
 
         while accepted_count() < DESIRED_FILE_COUNT:
-            sleep(1.0)
+            sleep(2.0)
             driver.execute_script("window.scrollTo(document.body.scrollTop, document.body.scrollHeight)")
-            parse_images(driver = driver)
+            sleep(2.0)
+
+            driver.switch_to_window(driver.window_handles[1])
+            image_urls = hexxer.get_image_urls_from_cache()
+            for url in image_urls:
+                if url not in parsed_image_urls:
+                    hexxer.create_image_from_cache(url, destination_folder = DOWNLOAD_DIR)
+                    parsed_image_urls.add(url)
+
+            driver.switch_to_window(driver.window_handles[0])
             print "Accepted files: ", accepted_count(), "/", DESIRED_FILE_COUNT
             print "Files parsed: ", total_count()
     finally:
-        driver.close()
+        #Close all tabs
+        for handle in driver.window_handles:
+            driver.switch_to_window(handle)
+            driver.close()

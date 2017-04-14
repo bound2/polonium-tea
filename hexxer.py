@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from subprocess import call
@@ -46,18 +47,18 @@ class Hexxer:
         return image_links
 
 
-driver = webdriver.Chrome()
-hexxer = Hexxer(chrome_driver = driver)
-try:
-    driver.get('https://python.org')
-    driver.execute_script("window.open();")
-    driver.switch_to_window(driver.window_handles[1])
-    image_urls = hexxer.get_image_urls_from_cache()
-    for url in image_urls:
-        hexxer.create_image_from_cache(url, destination_folder = 'test')
-
-    sleep(5.0)
-finally:
-    for handle in driver.window_handles:
-        driver.switch_to_window(handle)
-        driver.close()
+# driver = webdriver.Chrome()
+# hexxer = Hexxer(chrome_driver = driver)
+# try:
+#     driver.get('https://python.org')
+#     driver.execute_script("window.open();")
+#     driver.switch_to_window(driver.window_handles[1])
+#     image_urls = hexxer.get_image_urls_from_cache()
+#     for url in image_urls:
+#         hexxer.create_image_from_cache(url, destination_folder = 'test')
+#
+#     sleep(5.0)
+# finally:
+#     for handle in driver.window_handles:
+#         driver.switch_to_window(handle)
+#         driver.close()
