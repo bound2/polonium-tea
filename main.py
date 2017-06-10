@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from detector import HaarDetector
 from time import sleep
 from glob import glob
 from hexxer import Hexxer
-import wget
 import shutil
 import os
 
@@ -15,14 +13,18 @@ DISCARDED_DIR = 'discarded'
 CORRUPTED_DIR = "corrupted"
 DESIRED_FILE_COUNT = 6000
 
+
 def accepted_count():
     return len(os.listdir(ACCEPTED_DIR))
+
 
 def discarded_count():
     return len(os.listdir(DISCARDED_DIR))
 
+
 def total_count():
     return accepted_count() + discarded_count()
+
 
 def empty_folders():
     try:
@@ -33,6 +35,7 @@ def empty_folders():
     except Exception as e:
         pass
 
+
 def create_folders():
     try:
         os.makedirs(DOWNLOAD_DIR)
@@ -42,10 +45,11 @@ def create_folders():
     except Exception as e:
         pass
 
+
 def apply_haar_cascade(detector, image_set):
     for image_path in image_set:
         try:
-            object_found = detector.detect(image_path, min_size = (30, 30), max_object_count = 1)
+            object_found = detector.detect(image_path, min_size=(30, 30), max_object_count=1)
             if object_found == True:
                 shutil.move(image_path, ACCEPTED_DIR)
             else:
@@ -56,12 +60,13 @@ def apply_haar_cascade(detector, image_set):
             shutil.move(image_path, CORRUPTED_DIR)
             pass
 
+
 if __name__ == "__main__":
     empty_folders()
     create_folders()
 
     driver = webdriver.Chrome()
-    hexxer = Hexxer(chrome_driver = driver)
+    hexxer = Hexxer(chrome_driver=driver)
     detector = HaarDetector("cascades/haarcascade_frontalface_default.xml")
 
     parsed_image_urls = set()
@@ -85,7 +90,7 @@ if __name__ == "__main__":
             image_urls = hexxer.get_image_urls_from_cache()
             for url in image_urls:
                 if url not in parsed_image_urls:
-                    hexxer.create_image_from_cache(url, destination_folder = DOWNLOAD_DIR)
+                    hexxer.create_image_from_cache(url, destination_folder=DOWNLOAD_DIR)
                     parsed_image_urls.add(url)
 
             # filter the images with haar cascade
@@ -97,7 +102,7 @@ if __name__ == "__main__":
             print "Accepted files: ", accepted_count(), "/", DESIRED_FILE_COUNT
             print "Files parsed: ", total_count()
     finally:
-        #Close all tabs
+        # Close all tabs
         for handle in driver.window_handles:
             driver.switch_to_window(handle)
             driver.close()

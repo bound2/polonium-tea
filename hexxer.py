@@ -1,20 +1,17 @@
 #!/usr/bin/env python
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from subprocess import call
-from time import sleep
 import tempfile
 import os
 
-class Hexxer:
 
+class Hexxer:
     image_extensions = ['.png', '.jpg', '.jpeg']
     image_extension_tuple = tuple(image_extensions)
 
     def __init__(self, chrome_driver):
         self.chrome_driver = chrome_driver
 
-    def create_image_from_cache(self, url, destination_folder = None):
+    def create_image_from_cache(self, url, destination_folder=None):
         if destination_folder is not None and os.path.exists(destination_folder) == False:
             os.mkdir(destination_folder)
         self.chrome_driver.get(url)
@@ -40,25 +37,8 @@ class Hexxer:
         image_links = set()
 
         for element in links:
-             url = element.get_attribute('href')
-             if url.endswith(Hexxer.image_extension_tuple):
-                 image_links.add(url)
+            url = element.get_attribute('href')
+            if url.endswith(Hexxer.image_extension_tuple):
+                image_links.add(url)
 
         return image_links
-
-
-# driver = webdriver.Chrome()
-# hexxer = Hexxer(chrome_driver = driver)
-# try:
-#     driver.get('https://python.org')
-#     driver.execute_script("window.open();")
-#     driver.switch_to_window(driver.window_handles[1])
-#     image_urls = hexxer.get_image_urls_from_cache()
-#     for url in image_urls:
-#         hexxer.create_image_from_cache(url, destination_folder = 'test')
-#
-#     sleep(5.0)
-# finally:
-#     for handle in driver.window_handles:
-#         driver.switch_to_window(handle)
-#         driver.close()
