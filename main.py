@@ -101,7 +101,7 @@ if __name__ == "__main__":
         target_site.scroll_and_try_load()
 
         while accepted_count() < max_count:
-            initial_count = total_count()
+            initial_count = len(parsed_image_urls)
             sleep(2.0)
             target_site.scroll_and_try_load()
             sleep(2.0)
@@ -113,6 +113,10 @@ if __name__ == "__main__":
                 image_links=parsed_image_urls
             )
             parsed_image_urls.update(intermediate_parsed_urls)
+
+            if len(parsed_image_urls) == initial_count:
+                print "No more new files. Quitting early"
+                break
 
             # filter the images with haar cascade
             image_set = glob(DOWNLOAD_DIR + os.sep + '*')

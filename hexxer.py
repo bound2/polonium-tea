@@ -27,6 +27,7 @@ class Hexxer:
 
     def get_image_urls_from_cache(self, destination_folder, index=0, image_links=set(), reload_page=True):
         try:
+            # prevent empty reload on already parsed image
             if reload_page:
                 self.chrome_driver.get('chrome://view-http-cache/')
 
@@ -37,6 +38,7 @@ class Hexxer:
             if not duplicate:
                 self.chrome_driver.get(url)
                 try:
+                    # determine whether it is image at all
                     header_element = self.chrome_driver.find_elements_by_css_selector('pre')[0]
                     file_extension = None
                     if 'content-type: image/jpeg' in header_element.text:
