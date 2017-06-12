@@ -25,13 +25,16 @@ class Hexxer:
             else:
                 call('xxd -r ' + tf.name + ' ' + destination_folder + os.sep + file_name, shell=True)
 
-    def get_image_urls_from_cache(self, destination_folder, index=0, image_links=set()):
+    def get_image_urls_from_cache(self, destination_folder, index=0, image_links=set(), reload_page=True):
         try:
-            self.chrome_driver.get('chrome://view-http-cache/')
-            element = self.chrome_driver.find_elements_by_css_selector('a')[index]
+            if reload_page:
+                self.chrome_driver.get('chrome://view-http-cache/')
 
+            element = self.chrome_driver.find_elements_by_css_selector('a')[index]
             url = element.get_attribute('href')
-            if url not in image_links:
+            duplicate = url in image_links
+
+            if not duplicate:
                 self.chrome_driver.get(url)
                 try:
                     header_element = self.chrome_driver.find_elements_by_css_selector('pre')[0]
@@ -43,13 +46,19 @@ class Hexxer:
 
                     if file_extension is not None:
                         file_name = str(uuid.uuid4()) + file_extension
-                        self.create_image_from_cache(file_name=file_name, destination_folder=destination_folder)
+                        self.create_image_from_cache(
+                            file_name=file_name,
+                            destination_folder=destination_folder
+                        )
                         image_links.add(url)
 
                 except Exception as e:
                     print e.message
-            return self.get_image_urls_from_cache(destination_folder=destination_folder,
-                                                  index=index + 1,
-                                                  image_links=image_links)
+            return self.get_image_urls_from_cache(
+                destination_folder=destination_folder,
+                index=index + 1,
+                image_links=image_links,
+                reload_page=not duplicate
+            )
         except IndexError as ie:
             return image_links

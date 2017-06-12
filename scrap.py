@@ -15,7 +15,8 @@ class Scrappable:
         self.scroll_bottom()
         try:
             self.load_more()
-        except:
+        except Exception as e:
+            print e.message
             pass
 
 
@@ -39,7 +40,7 @@ class GoogleImages(Scrappable):
 
 
 class InstagramWeb(Scrappable):
-    XPATH_LOAD_MORE_BUTTON = '//*[contains(text(), "Load more")]'
+    XPATH_LOAD_MORE_BUTTON = '//a[contains(text(), "Load more")]'
 
     def load_more(self):
         element = self.chrome_driver.find_element_by_xpath(InstagramWeb.XPATH_LOAD_MORE_BUTTON)
