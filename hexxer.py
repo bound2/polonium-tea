@@ -2,22 +2,16 @@
 from subprocess import call
 import tempfile
 import os
+import uuid
 
 
 class Hexxer:
-    image_extensions = ['.png', '.jpg', '.jpeg']
-    image_extension_tuple = tuple(image_extensions)
-
     def __init__(self, chrome_driver):
         self.chrome_driver = chrome_driver
 
-    def create_image_from_cache(self, url, destination_folder=None):
+    def create_image_from_cache(self, file_name, destination_folder=None):
         if destination_folder is not None and os.path.exists(destination_folder) == False:
             os.mkdir(destination_folder)
-        self.chrome_driver.get(url)
-
-        url_parts = url.split('/')
-        image_name = url_parts.pop()
 
         file_body_element = self.chrome_driver.find_elements_by_css_selector('pre')[2]
         file_body = file_body_element.text.replace("  ", " ")
@@ -27,18 +21,35 @@ class Hexxer:
             tf.flush()
 
             if destination_folder is None:
-                call('xxd -r ' + tf.name + ' ' + image_name, shell=True)
+                call('xxd -r ' + tf.name + ' ' + file_name, shell=True)
             else:
-                call('xxd -r ' + tf.name + ' ' + destination_folder + os.sep + image_name, shell=True)
+                call('xxd -r ' + tf.name + ' ' + destination_folder + os.sep + file_name, shell=True)
 
-    def get_image_urls_from_cache(self):
-        self.chrome_driver.get('chrome://view-http-cache/')
-        links = self.chrome_driver.find_elements_by_css_selector('a')
-        image_links = set()
+    def get_image_urls_from_cache(self, destination_folder, index=0, image_links=set()):
+        try:
+            self.chrome_driver.get('chrome://view-http-cache/')
+            element = self.chrome_driver.find_elements_by_css_selector('a')[index]
 
-        for element in links:
             url = element.get_attribute('href')
-            if url.endswith(Hexxer.image_extension_tuple):
-                image_links.add(url)
+            if url not in image_links:
+                self.chrome_driver.get(url)
+                try:
+                    header_element = self.chrome_driver.find_elements_by_css_selector('pre')[0]
+                    file_extension = None
+                    if 'content-type: image/jpeg' in header_element.text:
+                        file_extension = '.jpg'
+                    elif 'content-type: image/png' in header_element.text:
+                        file_extension = '.png'
 
-        return image_links
+                    if file_extension is not None:
+                        file_name = str(uuid.uuid4()) + file_extension
+                        self.create_image_from_cache(file_name=file_name, destination_folder=destination_folder)
+                        image_links.add(url)
+
+                except Exception as e:
+                    print e.message
+            return self.get_image_urls_from_cache(destination_folder=destination_folder,
+                                                  index=index + 1,
+                                                  image_links=image_links)
+        except IndexError as ie:
+            return image_links
